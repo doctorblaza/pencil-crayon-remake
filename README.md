@@ -24,6 +24,7 @@ Distilled from production runs remaking anime OPs at 1920×1080 / 12fps /
 - `SKILL.md` — the full workflow and operating rules
 - `references/style-prompt-template.md` — the frozen prompt template
 - `references/pipeline.md` — ffmpeg commands for extract / assemble / verify / QC
+- `references/rework-experience.md` — casebook: watermark handling, title-card continuity, color locks, and rework discipline from the Slam Dunk & Fire Force productions
 
 ## The iron rules
 
