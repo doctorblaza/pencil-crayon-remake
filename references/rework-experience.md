@@ -6,7 +6,10 @@ read this before starting a new remake, and again before any rework round.
 
 - **Slam Dunk OP** (103.25s, 1239 frames): v2 deleted → v3 QC FAIL → v4 PASS;
   4:3 line (1440×1080) 43 → 43b → 43c → 43d → **43e final**, published.
-- **Fire Force OP** (89s, 1068 frames, 1920×1080): v1 → v2 (ending title fix) → **v3** (opening title fix).
+- **Fire Force OP** (89s, 1068 frames, 1920×1080): v1 → v2/v3/v4 (title-card
+  continuity, three rounds) → v5–v8 (skin-tone & scale chain).
+- **IRIS OUT** (MV 153s/1838 frames; OP 149s/1788 frames): blocked-frame
+  three-step siege, letterbox normalization, candidate-elimination fixes.
 
 ---
 
@@ -113,6 +116,64 @@ immediate neighbors didn't — a visible pop.
 Rule: QC title/credit overlays by **continuity across the whole appearance**,
 never by single frames; a title may never pop in or out mid-sequence.
 
+**v4 — thumbnails lie.** The user reported the ending title still leaking at
+1:26–1:28. A full-frame quantitative audit redefined the segment as
+f_1036–f_1064: **22 frames** missing or incomplete (incl. f_1055, which needed
+a second repair). v2's "3 frames" figure came from checking a thumbnail
+contact sheet. Title-card verification is full-size, frame by frame, plus a
+quantitative audit.
+
+**Skin-tone chain (v5–v8).** Per-frame coloring also throws off skin tones
+within a shot. v5 fixed 11 user-named frames (6 too pale: f_0556/0558/0562/
+0565/0574/0575; 5 too dark: f_0566/0573/0961/0962/0963) by matching neighbor
+brightness; f_0573 still read dark on the user's re-watch → one more
+single-frame round → v6. v7: f_0449/f_0450 (corner figure distorted, palette
+pulled toward f_0447/f_0448), f_0577/f_0578 brightened toward f_0576/f_0579.
+v8: f_0960/f_0962 faces restored to the neighbors' warm tone, and f_0963
+**enlarged to sit between f_0962 and f_0964** — subject scale is a sequence
+property, not a frame property. Off-by-one hazard on this line: frame sheets
+were labeled 0-based, production files 1-based (label N = file f_{N+1});
+pixel-compare to confirm the mapping before assembling any named-frame fix.
+
+---
+
+## IRIS OUT — Blocked-Frame Siege & Letterbox
+
+Two versions of the same song (official MV, 153s/1838 frames; no-subtitle OP,
+149s/1788 frames) stress-tested the gap policy.
+
+**MV version.** 239 frames (13%) refused (chainsaw/gore/bed scenes); the
+longest neighbor-filled stretch was f_1070–f_1111 = 42 frames ≈ 3.5s static —
+**report the longest stretch, not just the percentage**. An anti-flicker pass
+unified the ending static card and repaired 8 of 12 single-frame tone jumps.
+The production agent died at 171/1838; a replacement resumed from on-disk
+state across repeated service restarts and finished the run. MV v2 (cut to
+1:26 per the user) also set the letterbox precedent: bars normalized to fixed
+137/137 pure black, verified constant on 7 sampled frames, content unscaled.
+
+**OP version — the three-step siege.** On the user's explicit order, the 160
+refused frames were attacked in steps: ① same-prompt retries recovered 8;
+② slight prompt adjustments recovered 14; ③ transition-generation from
+neighbors recovered 136. Two frames (f_0450/f_0451, a near-static yawn
+close-up) never passed and stayed neighbor-filled (~0.17s). Step ③ is **not**
+free fidelity — known deviations, disclosed to the user: f_0443 generated as
+a back view (source: front); a bedroom close-up run darker and teal-er than
+source; a clock run unified warm, with a cat emblem where the source has an
+eye; f_1460/f_1465 missing a foreground creature; a splash burst omitted.
+A siege recovery is always reported **with its deviations** — silent
+substitution is how trust dies.
+Scale consistency: the 28–32s newspaper figure breathed ~6.5% across 6
+frames (f_0345, f_0358, f_0362, f_0367, f_0370, f_0373) — located
+quantitatively, redrawn, re-measured back to baseline.
+
+**Single-frame fix by candidate elimination (stubble frames f_0074/f_0075).**
+Generate 4–5 candidates per frame and eliminate: f_0075's first batch was
+rejected wholesale — candidates turned black pants into blue jeans and
+blonde hair brown. Only the candidate matching its neighbors on face, hair,
+costume **and** composition shipped. And f_0075 itself was spotted by the
+fixer, worse than the user-named f_0074: reported first, fixed only after
+the user's explicit go.
+
 ---
 
 ## Cross-Cutting Rework Rules
@@ -134,3 +195,8 @@ never by single frames; a title may never pop in or out mid-sequence.
    reported ≠ on disk. Check the artifact.
 7. **Every re-encode gets a new filename** (v3→v4→v5, 43→43e) — cached old
    versions must never resurface on the user's phone.
+8. **Thumbnails are not evidence.** Any count or verdict about frames comes
+   from full-size frames, plus a quantitative audit for overlays, tones,
+   and scale.
+9. **State on disk, always.** Batch log + frames on disk; a dead worker's
+   run is resumed from disk, never restarted from zero.
