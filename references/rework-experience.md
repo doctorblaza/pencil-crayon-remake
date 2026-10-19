@@ -1,6 +1,6 @@
-# Rework Experience — Slam Dunk & Fire Force
+# Rework Experience — Casebook
 
-Casebook from two pencil-crayon B-track productions (12fps, per-frame independent img2img)
+Casebook from pencil-crayon B-track productions (12fps, per-frame independent img2img)
 that went through multiple user QC rounds. The fixes below are the expensive lessons;
 read this before starting a new remake, and again before any rework round.
 
@@ -10,6 +10,10 @@ read this before starting a new remake, and again before any rework round.
   continuity, three rounds) → v5–v8 (skin-tone & scale chain).
 - **IRIS OUT** (MV 153s/1838 frames; OP 149s/1788 frames): blocked-frame
   three-step siege, letterbox normalization, candidate-elimination fixes.
+- **October 16–19 batch** (Yanineko, KICK BACK, Chuuka Ichiban, Gurren Lagann,
+  Frieren OP2, Fire Force ED1, Higurashi OP, Gundam W/X, FX, Witch from Mercury):
+  dynamic fills, static-shot mode, locked plates, direct-source motion — see the
+  dated casebook section below.
 
 ---
 
@@ -176,6 +180,143 @@ the user's explicit go.
 
 ---
 
+## October 16–19 Casebook — Fills, Static Shots, Locked Plates
+
+### Yanineko & KICK BACK — dynamic fills and the likeness gate
+The user set the run-length rule: neighbor-filled runs of **3+ frames must be
+rebuilt as moving frames** (each frame slightly different, differences stringing
+into action); 1–2 frame fills stay. Yanineko v3 rebuilt 3 runs (35 frames) this
+way — and the user still rejected it: **the filled frames' characters didn't
+look like the characters**. Motion is not enough. Every transition-generated
+frame with a person now passes a three-way check (source | established
+same-character anchor | candidate, face zoom included); distorted candidates
+are discarded in production, never shipped for the user to catch (KICK BACK v3
+discarded runs whose suits shifted blue frame-to-frame, whose chain froze a
+face and invented a fist, and one that drew the wrong shot entirely).
+Known step-③ deviation types to audit explicitly: costume pattern invented
+(plain dirty dress → red patterned), scene tone shifted a grade, small props
+sanitized away (a lighter's flame vanished although both endpoint frames had
+one). Also: verify segment boundaries against the source itself — one ledger
+had a cut point wrong by a frame.
+Color fixes are measured, not eyeballed: KICK BACK f_0379 still read black in
+v3; v4 drew 10 candidates and picked the one whose measured color (191,166,155)
+sat in the source's grey-purple family, clear of the black range — the rest of
+the film stayed byte-identical. A face/body fix spanning f_0105–f_0108 was
+selected as a group (same narrowed face/neck grade across all four, checked
+against f_0109), not frame by frame.
+
+### Chuuka Ichiban & Gurren Lagann — restricted motifs, transitions, trajectories
+- The emblem 「特」 belongs **only** to the ending card; the model kept inventing
+  it mid-film (dragon tail, pre-ending frames, a whole 3–9s stretch). Rule:
+  inventory where a motif may appear; scan the whole film for out-of-segment
+  occurrences. Same for a prop (a booklet) that exists only at the ending.
+- Treatment is per-segment: one frame (f_0209) had to be pure black-and-white
+  while its neighbors are color; near-black transition frames follow their
+  standard frame, not the color pipeline's default.
+- A source **dissolve** (f_0930–f_0938) was lost — the background jumped.
+  Transitions are checked as spans, not frames.
+- Gurren's ending moon: 72 frames redrawn from 454 candidates, selection gated
+  on the moon's position against the source trajectory (mean deviation 5.1px,
+  max 14.3px; over-limit candidates rejected). And a correction with a lesson:
+  the "anchor moon shifted 55px" figure reported for v2/v3 was a measurement
+  artifact (a bright nebula skewed the reading). **Use one measurement method
+  across versions, robust against bright distractors, before reporting a drift.**
+
+### Frieren OP2 — the named range is not the effect's boundary
+The user named the title segment to f_0337; full-frame measurement showed the
+source title wipe actually runs to **f_0344**. The fix covered f_0284–f_0344
+(61 frames) — stopping at the named frame would have left a visible break at
+f_0338. Rule: for a continuous effect, verify its true boundary in the source;
+the fix covers the effect, and the extension is reported, not silently made.
+
+### Fire Force ED1 — static shots, a waterfall, and a lost prompt
+- **Static-shot mode born here**: per-frame coloring made still shots shimmer.
+  v5 converted 9 still segments (242 frames) to 1s = 3 drawings; v10 extended
+  it to the whole first 13 seconds, choosing anchors by source analysis
+  (still/slow-drift seconds take frames 1/5/9; a smoke-transition second
+  anchors on the transition frame). Report unique drawings separately from
+  output frames; when a siege-blocked anchor is missing, that second honestly
+  has 2 unique drawings held longer.
+- **Anti-flicker by candidate fit**: four still light-pillar shots (94 frames)
+  were fixed by generating multiple candidates per frame and picking by fit
+  with the neighbors — no programmatic blending. Cathedral median adjacent
+  difference 44.5 → 20.6; the fastest pan pairs stayed the film's highest and
+  were disclosed, not hidden.
+- **The waterfall (27–30s)**: 33 frames in a bathing-class scene. A silhouette
+  version was rejected by the user. What worked: the segment already had ONE
+  passing generated frame (f_0335, static camera, only the water moves) — it
+  became the locked base; characters/composition/set frozen, only the water
+  varies per frame. Final accounting: 20 true generations, 3 dynamic fills
+  derived from passing neighbors, 10 static fills — every fill labeled.
+- **Sensitive-category carve-out**: of 59 category refusals in this film, only
+  one frame (a pale rain silhouette) was recovered, via a step-② brightness
+  wording tweak. The other 58 were verified bathing/shower frames: steps ②/③
+  would be filter evasion and were **not executed**, despite a standing siege
+  order elsewhere. Classify the content before applying any siege.
+- **Hard stop honored**: f_0467–f_0471 went through scheduled hourly retries
+  until the user said "last attempt, then stop; if all fail, don't change the
+  film." Final round: 0/5 (one generated frame QC-killed for a black-block
+  face). The film stayed untouched and the retry job was closed.
+- **Prompt loss**: the workspace was cleaned with the production and the frozen
+  prompt original died with it (hash only). v9's prompt was reconstructed from
+  the skill template + surviving spec fragments, validated on standard frame
+  f_0609, frozen, saved back, and reported as a reconstruction. Archive method
+  assets outside the workspace (§10 of the SKILL).
+- **Background unification is measured**: v9 unified the 35th second to anchor
+  f_0430 (background diff mean 50.2 → 25.4, residual traced to leaf-hatching
+  detail, visually stable); v10 unified the whole 33–39s scene, not just the
+  one named second (anchor diff mean 23.96 → 16.17), characters untouched.
+
+### Higurashi — complex motion: direct source or nothing
+The underwater-twins rotation (117 frames) failed twice: v6 rebuilt it with
+locked uniforms but wrong composition; v7 measured the source (rotation curve,
+hair color ≈ RGB 99,145,188 steel-blue) and still drifted too far in pose —
+the user: follow the original film, not an approximation. v8 changed method:
+3 probe frames (f_0609/f_0660/f_0725) approved by the user, then **direct
+img2img of every source frame** — pose, composition, and rotation locked by
+the source frame itself; only the style and the uniforms changed. 117/117,
+no neighbor copies.
+Color locks are **shot-local and measured**: the twins read steel-blue under
+water light while Satoko elsewhere is gold — and one segment had been colored
+purple because the character was misidentified (thought to be Hanyuu). Verify
+who is in the segment before locking its colors.
+Trajectory locks work when the object is simple: the 1:28–1:30 sun was redrawn
+across 24 frames to the source path (center x ≈ 0.913 constant, y 0.103 →
+0.080); the remake had it wandering x 0.72–0.96.
+Object **state** is part of fidelity: the flower occluding Rika (f_0426) was
+first missing (v8), then restored open and front-facing (v9) — user: it must
+be the **unopened bud, back-facing**, as in f_0427. v10 matched that spec
+(closed red bud, green star calyx) and the user *still* rejected the frame;
+the case was reopened with full 34/35/36-second sheets for the user to point
+at what's wrong. Lesson recorded honestly: matching the written spec is not
+the same as matching the frame — when a user says "still not right" twice,
+stop guessing, put the full-size neighboring seconds in front of them, and let
+them point.
+
+### Gundam W/X, FX, Witch from Mercury — dark scenes and locked plates
+- Dark scenes are the generator's weak point, three films running: deep-space
+  backgrounds came back beige paper with flicker (Gundam X v1 QC FAIL), black
+  frames came back with paper borders or not at all (18 black frames lost on
+  X; W's pure-black probe frame grew a paper edge), a black frame in another
+  production measured luminance 22 → 196 (white). Dark shots get their own
+  QC pass (§7.9); "pure black stays pure black" is a checkable rule.
+- **Fix the plate, not the frames**: FX's extra staircase was traced to one
+  background plate (plate_030 had painted sparse floating steps as a dense
+  thick staircase); the 4 generation frames using it were fine. The plate was
+  regenerated from the source median, only 4 frames recomposited, and the
+  locked-area difference re-measured at exactly 0. FX's full background audit:
+  78 same-background groups, locked-area adjacent difference max = 0.
+- Restart-truncated PNGs are real: two FX frames were found corrupt at QC.
+  Decode-validate every frame after an interruption (§4).
+- Aspect changes are full redos: Gundam W shipped at a user-set 3:4, then the
+  user ordered W and X both redone at native 4:3 — from source, no cropping or
+  stretching of the old frames. Mercury's redo spec is the standing template
+  for anti-flicker: scene-split first, one background per scene, one anchor
+  frame locking all colors per shot, per-shot measured adjacent color/background
+  differences in QC, whole-scene redo over threshold, one locked title card.
+
+---
+
 ## Cross-Cutting Rework Rules
 
 1. **Frame-sheet loop.** The user reviews frame sheets, names frame numbers and
@@ -200,3 +341,18 @@ the user's explicit go.
    and scale.
 9. **State on disk, always.** Batch log + frames on disk; a dead worker's
    run is resumed from disk, never restarted from zero.
+10. **Grade gaps by run length.** 1–2 frames: neighbor fill, done. 3+ frames:
+    rebuild as moving frames or report the run as unresolved — a static
+    freeze over a long run is a defect, not a fill.
+11. **Classify before you siege.** Sensitive category blocks are not attacked
+    with reworded prompts or transition generation; user stop conditions end
+    retry jobs on the spot.
+12. **Shot book before batch.** Characters verified per segment, colors
+    measured in-shot, plates, treatments, restricted motifs, motion class —
+    written down first, argued about never.
+13. **Preserve the method assets.** Frozen prompt, plates, logs, and maps
+    live outside the deletable workspace; reconstructions are labeled.
+14. **Validate files, not counts.** After any interruption, decode-check
+    every frame; a truncated file still shows up in `ls`.
+15. **Frame sheets: one second per sheet,** 12 frames, red frame numbers,
+    persistent directory — that's the format the user reviews in.
