@@ -1,6 +1,6 @@
 ---
 name: "pencil-crayon-remake"
-description: "Frame-by-frame anime remake pipeline in pencil-sketch + crayon-coloring style: one locked verbatim style prompt, independent per-frame img2img (no chaining), one locked title card and one locked background per scene, shot classification with a 3-drawings-per-second mode for static shots, 12fps production, honest gap handling, independent frame-level QC, faststart delivery. Use when remaking an anime OP/ED/clip into a hand-drawn pencil & crayon look while keeping the original composition and acting intact."
+description: "Frame-by-frame anime remake pipeline in pencil-sketch + crayon-coloring style: one locked verbatim style prompt, independent per-frame img2img (no chaining), shot classification with a 3-drawings-per-second mode for static shots, 12fps production, honest gap handling, independent frame-level QC, faststart delivery. Use when remaking an anime OP/ED/clip into a hand-drawn pencil & crayon look while keeping the original composition and acting intact."
 ---
 
 # Pencil-Crayon Anime Remake
@@ -60,23 +60,24 @@ rejected on likeness and pose. Run probe frames first (start / middle / end of t
 segment), get the user's go-ahead, then direct-img2img every source frame.
 Measurements are for QC and candidate selection only, never for rebuilding action.
 
-### 3b. Lock the Title Card and the Backgrounds Before the Batch
-- Build exactly **one finished title card** for the whole film before batch
-  production: text, font size, position, and decoration fixed from the source.
-  Reuse that same card on every frame where it appears; never redraw it per frame.
-- The lock covers the artwork, not the source's animation: if the source title
-  assembles, wipes, or drifts, composite the one locked card along the source's
-  own trajectory/timing — do not freeze a moving title, and do not redraw it.
-- Group frames into scenes/shots before production; name one **anchor frame**
-  per scene. Where frames share a background, use **one locked background**
-  for the whole span instead of redrawing it per frame, and lock the scene's
-  colors to the anchor (hair / costume / machine / scene tone — no large jumps
-  between neighboring frames).
-- A locked background is a locked *design*, not a static-plate shortcut: if the
-  source camera moves, the background content and camera path must still follow
-  the source (a user-cancelled single-image pan is the cautionary case).
-- When a background is wrong, fix the background layer/plate itself and
-  recomposite only the affected frames instead of redrawing the characters.
+### 3b. No Locked Title Cards, No Locked Backgrounds (user order, 2026-10-19)
+- **Title cards are drawn per frame** from each frame's own source frame, like
+  everything else. There is no locked or composited title card — a whole-frame
+  title lock in Gundam W v3 froze a standing character's pose along with the
+  card, and the user ordered the technique removed. Title fidelity is enforced
+  by QC instead (§7.5): every frame of a title's appearance is checked at full
+  size against the source, including the title's own animation (assembly,
+  wipe, drift) exactly as the source performs it.
+- **Backgrounds are drawn per frame too.** Never composite a shared background
+  plate across frames — the plate pass produced the artifacts the user
+  rejected in Gundam X v4. Background consistency is an outcome, not a
+  technique: QC measures adjacent-frame background differences and each
+  frame's color difference against the scene anchor (§7.8), and frames that
+  jump are redrawn from their own source frames.
+- Group frames into scenes/shots before production and name one **anchor
+  frame** per scene as the color reference (hair / costume / machine / scene
+  tone). The anchor is a reference for drawing and QC — never a plate or a
+  frozen layer.
 
 ### 3c. Shot Book & Shot Classification (before the batch)
 Build a shot book first; most expensive rework traces back to a missing line here.
@@ -85,7 +86,7 @@ Per shot, record:
   poisoned a whole segment's hair color), the user/QC standard frame, and
   **measured key colors sampled from this shot's own frames** (scene lighting
   shifts apparent color; never copy a character's colors from another scene).
-- Background plate/anchor, motion class (below), treatment (color / black-and-white /
+- Background reference/anchor, motion class (below), treatment (color / black-and-white /
   silhouette / glare-washed), and transition type (cut / dissolve / wipe).
 - **Restricted motifs**: logos, emblems, characters, or props that may appear
   only in specific segments (e.g. an emblem that belongs only at the ending).
@@ -95,13 +96,15 @@ Per shot, record:
 
 Motion classes:
 - **Dynamic** — full per-frame independent img2img (§3).
-- **Slow camera move** — per-frame img2img; locked background design following
-  the source camera path.
-- **Static / near-static** — do NOT draw 12 unique frames per second (per-frame
-  coloring is the flicker source). Use **1 second = 3 drawings**: 3 anchor
-  drawings per second, each held 4 output frames. Choose anchor positions from
-  the source's actual drift and cut points, not mechanically (frames 1/5/9 is
-  only the default for a truly still second). Slow pushes are NOT static.
+- **Slow camera move** — per-frame img2img following the source camera path;
+  the background is drawn in every frame like everything else.
+- **Static / near-static** — default is still per-frame independent img2img
+  like everything else. The **1 second = 3 drawings** mode (3 anchor drawings
+  per second, each held 4 output frames; anchor positions chosen from the
+  source's actual drift and cut points, frames 1/5/9 only the default for a
+  truly still second; slow pushes are NOT static) is **opt-in only**: use it
+  solely when the user explicitly asks for it on a named production — never
+  on your own initiative (user rule, 2026-10-19).
 - **Locked camera, one moving element** (user-approved exception, named shots
   only): take one already-passing generated frame as the base; lock characters,
   composition, and set; vary only the moving element (e.g. water) per frame.
@@ -183,9 +186,9 @@ A separate QC agent (not the producer) checks the assembled video:
    once per frame, and gain no set elements the source doesn't have. Measure the
    background difference between neighboring frames and each frame's color
    difference against the scene anchor; report the numbers in the verdict.
-   A locked background passes only at measured difference zero, or with the
-   residual explained frame by frame; a scene whose locked background differs
-   or whose colors jump past threshold is redone as a whole scene.
+   Frames whose background or colors jump visibly or past threshold against
+   the source and the scene anchor are redrawn from their source frames; a
+   scene that keeps failing this check is redone as a whole scene.
 9. **Dark scenes & black frames (dedicated pass)**: sample every dark shot.
    Black frames stay pure black — any invented paper edge, border, or glow is a
    FAIL (dark space backgrounds repeatedly came back beige-paper; a black frame
@@ -258,9 +261,8 @@ new filename** — never reuse a filename the user may have cached.
 ### 10. Preserve the Production Assets
 The workspace is disposable; the method assets are not.
 - Archive outside the deletable workspace: the frozen prompt (full text + hash),
-  the locked title card and background plates, the batch log, the assembly/gap
-  map, and the shot book. A cleanup once destroyed a frozen prompt original —
-  only its hash survived.
+  the batch log, the assembly/gap map, and the shot book. A cleanup once
+  destroyed a frozen prompt original — only its hash survived.
 - If the prompt is lost, reconstruct it from the skill template + surviving
   specs/logs, validate the reconstruction on a standard frame, freeze it, save
   it back, and label it **reconstructed** in every report — never present it as
@@ -285,7 +287,7 @@ The workspace is disposable; the method assets are not.
 2. **No chaining.** Each frame is independent img2img from its own source frame.
 3. **Strict fidelity.** Change the rendering style only; never invent details.
 4. **12fps production standard.** Duplicate to 24fps at assembly if needed.
-   Static shots use 1s = 3 drawings (§3c) inside that standard.
+   The static-shot 1s = 3 drawings mode is opt-in only, when the user asks (§3c).
 5. **Gaps are graded by run length**: 1–2 frames neighbor-filled; 3+ frames
    rebuilt as moving frames or reported unresolved. Retries only via the
    user-ordered three-step siege, under its hard stops (§5).
@@ -299,16 +301,16 @@ The workspace is disposable; the method assets are not.
     progress is reported from disk-verified, decode-validated files only.
 12. **View the source before naming a trait.** Never describe a hairstyle, color
     or costume detail from memory or impression; cite the user's standard frame.
-13. **One title card per film.** One locked card reused on every frame it appears;
-    source title animation is followed with that same card, never redrawn.
-14. **One background per shared scene.** One locked background + one anchor color
-    set per scene; QC reports measured background/color differences per scene.
-15. **Check continuity spans frame by frame.** A persistent title card or prop
+13. **No locked title cards, no locked backgrounds.** Both are drawn per frame
+    from their own source frames; consistency is a QC measurement against the
+    source and the scene anchor, never a composited lock (user order, 2026-10-19).
+14. **Check continuity spans frame by frame.** A persistent title card or prop
     must stay present, single, and on-model in every frame of its span.
-16. **Shot book before batch.** Characters, measured colors, plates, treatments,
-    restricted motifs, and motion class are written down before production.
-17. **Verify the title against the source** before any post; no AI in the title,
+15. **Shot book before batch.** Characters, measured colors, background
+    references, treatments, restricted motifs, and motion class are written
+    down before production.
+16. **Verify the title against the source** before any post; no AI in the title,
     AI declared in the creation statement; existing AI-titled posts stay as they are.
-18. **Recheck the version right before upload.** Upload only the newest landed version.
-19. **Preserve the method assets** (prompt, plates, logs, maps) outside the
+17. **Recheck the version right before upload.** Upload only the newest landed version.
+18. **Preserve the method assets** (prompt, logs, maps, shot book) outside the
     deletable workspace; a lost prompt is reconstructed, validated, and labeled.
