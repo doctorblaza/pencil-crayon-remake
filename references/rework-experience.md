@@ -314,6 +314,13 @@ them point.
   for anti-flicker: scene-split first, one background per scene, one anchor
   frame locking all colors per shot, per-shot measured adjacent color/background
   differences in QC, whole-scene redo over threshold, one locked title card.
+- **Superseded (user order, 2026-10-19, later the same day):** the title-card
+  lock and the background lock/plate methods recorded in this casebook were
+  removed from the SKILL — the W v3 whole-frame title lock froze a standing
+  character's pose, and the X v4 plate pass produced the artifacts the user
+  rejected. Historical record only: the current method draws title cards and
+  backgrounds per frame from their own source frames and checks consistency
+  by QC measurement against the source and the scene anchor.
 
 ---
 
@@ -348,9 +355,9 @@ them point.
     with reworded prompts or transition generation; user stop conditions end
     retry jobs on the spot.
 12. **Shot book before batch.** Characters verified per segment, colors
-    measured in-shot, plates, treatments, restricted motifs, motion class —
+    measured in-shot, background references, treatments, restricted motifs, motion class —
     written down first, argued about never.
-13. **Preserve the method assets.** Frozen prompt, plates, logs, and maps
+13. **Preserve the method assets.** Frozen prompt, logs, maps, and shot books
     live outside the deletable workspace; reconstructions are labeled.
 14. **Validate files, not counts.** After any interruption, decode-check
     every frame; a truncated file still shows up in `ls`.
