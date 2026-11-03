@@ -60,7 +60,7 @@ rejected on likeness and pose. Run probe frames first (start / middle / end of t
 segment), get the user's go-ahead, then direct-img2img every source frame.
 Measurements are for QC and candidate selection only, never for rebuilding action.
 
-### 3b. No Locked Title Cards, No Locked Backgrounds (user order, 2026-10-19)
+### 3b. No Locked Title Cards, No Locked Backgrounds — Background-First Board Is User-Gated (user orders, 2026-10-19 and 2026-11-03)
 - **Title cards are drawn per frame** from each frame's own source frame, like
   everything else. There is no locked or composited title card — a whole-frame
   title lock in Gundam W v3 froze a standing character's pose along with the
@@ -74,6 +74,41 @@ Measurements are for QC and candidate selection only, never for rebuilding actio
   technique: QC measures adjacent-frame background differences and each
   frame's color difference against the scene anchor (§7.8), and frames that
   jump are redrawn from their own source frames.
+- **The background-first board is user-gated, not a default method.**
+  The board method draws one background plate first and then adds characters
+  frame by frame on top of it. Do NOT use it on your own initiative, even
+  when the background looks static. Use it only when the user explicitly
+  orders it for a named place or segment, and the user judges, place by
+  place, whether it suits that place (final user order, 2026-11-03, which
+  supersedes the same day's earlier outright-ban wording). Evidence: in
+  November 2026 the board was tried on two 90-second OPs — it held the
+  background, but per-draw characters and light beams still varied in
+  brightness, so flicker remained; one OP's independent QC still failed
+  with flicker steps only falling from 379 to 245, and a segment redone
+  under the board (arena beams, 15 frames) still had not healed. The user
+  then ordered the board-made frames redone from their own source frames.
+  A board the user orders for one named segment is not a license to use it
+  elsewhere, and it does not revive the abolished background lock of
+  2026-10-19.
+- **Dark-scene black paper is not a board.** Black paper means each dark
+  frame is drawn on black paper from its own source frame, with no shared
+  plate reused across frames. Black-paper dark frames are not redone under
+  the board rule, and the locked-camera one-moving-element exception in
+  §3c (named shots only) is a separate exception, not a general board
+  license.
+- **Flicker repair, replacement method (user order, 2026-11-03):** redraw
+  each frame from its own source frame only, generate multiple candidates
+  per frame (at least 4, up to 8; stop drawing on a category block), and
+  select first on subject likeness and pose, then on luminance closeness
+  to the source, then on same-scene neighboring-frame background color
+  (background step target under 12 in the November 2026 redo order).
+  Diagnose what is actually jumping first — beam, person, or both — before
+  rerunning anything; rerunning the same method on an undiagnosed segment
+  is how the 15-frame beam segment above stayed unhealed. A candidate
+  worse than the current frame is not hard-swapped in: keep the current
+  frame and disclose the residual. A candidate that paints only background
+  with no face or subject — even if its mean luminance looks close — is
+  not a pass; visually confirm the subject exists.
 - Group frames into scenes/shots before production and name one **anchor
   frame** per scene as the color reference (hair / costume / machine / scene
   tone). The anchor is a reference for drawing and QC — never a plate or a
@@ -109,6 +144,22 @@ Motion classes:
   only): take one already-passing generated frame as the base; lock characters,
   composition, and set; vary only the moving element (e.g. water) per frame.
 
+### 3d. Resume Gate — Audit the Base Before Building on It
+Before resuming a paused line, assembling from existing frames, or
+delivering from them, audit the base and write the audit result into the
+production log before new work starts:
+- Check the base for methods the user has since abolished — above all
+  locked background plates, locked or composited title cards, frozen or
+  composited segments carried in from before the method change, and
+  background-first boards used without a user order for that segment.
+- Count duplicate and frozen frame pairs across the whole base and
+  reconcile every pair against logged gap fills, because an unexplained
+  duplicate pair is a failed audit.
+- Replace suspect segments by per-frame redraw from their own source
+  frames instead of shipping them for the user to catch. The QC verdict
+  must state the resume-gate result, with duplicate/frozen pair counts
+  and how each pair was reconciled.
+
 ### 4. Parallel Batch Production
 - Split the frame range into contiguous chunks across 2–4 workers.
 - Naming: `f_0001.png`, `f_0002.png`, … (zero-padded, sortable).
@@ -120,6 +171,15 @@ Motion classes:
   a truncated PNG still counts in a file listing (two frames were once silently
   cut in half by a restart). Correct a wrong progress report in the same thread
   as soon as a disk check disagrees with it.
+- Close out a multi-worker batch only from a per-group reconciliation table
+  listing every worker group, the frames that group claimed, and the
+  decode-valid frames actually landed on disk for that group reconciled
+  against its own log. Treat a group as incomplete when its landed count
+  falls short of its claimed count. End a coordinator run only after
+  verified assembly — the assembled file exists, its frame count matches
+  the expected count, and its faststart state is correct. Keep the run
+  open, or hand the unreconciled list explicitly to a closing coordinator,
+  when any group is unreconciled or assembly is missing.
 
 ### 5. Gap Policy — Honest, Never Hidden
 The image pipeline will refuse some frames (content filters) or return black/bad frames.
@@ -153,7 +213,19 @@ The image pipeline will refuse some frames (content filters) or return black/bad
     and close any retry job.
 
 ### 6. Assembly
-- 12fps master: `ffmpeg -framerate 12 -i out/f_%04d.png -i audio.m4a -c:v libx264 -pix_fmt yuv420p -c:a aac -movflags faststart final.mp4`
+- 12fps master: `ffmpeg -framerate 12 -i out/f_%04d.png -i audio.m4a -map 0:v:0 -map 1:a:0 -c:v libx264 -pix_fmt yuv420p -c:a aac -movflags faststart final.mp4`
+- **Explicit stream mapping is required, not optional.** An audio file can
+  carry a hidden video stream that default stream selection picks, shipping
+  the wrong picture. Map video stream 0 and audio stream 1 explicitly, and
+  verify output dimensions with ffprobe against the remake frame
+  dimensions, not the source dimensions.
+- **Assembly writes are remove-before-copy.** Remove the destination file
+  before copying a frame into an assembly directory, and never overwrite a
+  file in place when that file may be hard linked to an earlier assembly.
+  After assembly, check earlier assemblies to confirm no earlier assembly
+  changed: in November 2026 a copy without remove-first wrote through hard
+  links and polluted two earlier assemblies' frames, which had to be
+  recovered from the fix workers' own directories.
 - If 24fps delivery is needed, duplicate each frame once at assembly time
   (12fps of real AI frames → 24fps output), don't invent in-between frames.
 - 1920×1080, H.264 + AAC, `faststart` (moov atom at file head) — required for web/GitHub playback.
@@ -213,6 +285,32 @@ Verdict per batch: PASS / FAIL with frame numbers. FAIL frames are redone indivi
 (per §3, from their own source frames), then the whole clip is **re-encoded under a
 new filename** — never reuse a filename the user may have cached.
 
+### 7a. QC Gate Before Delivery (user order, 2026-11-01)
+- **Independent QC PASS is required before delivery.** The producer's own
+  check does not count as a pass, and a FAIL film is not delivered or
+  published, however far the numbers improved.
+- Besides the 13 items above, QC must check the standing user-opinion
+  checklist and write each check into the verdict: subject-scale trajectory
+  (height / centroid step of roughly >10px inside a continuous segment is
+  a one-frame pulse and a flicker FAIL); neighbor-frame face/subject
+  brightness outliers; the same defect swept across the whole segment and
+  visually similar segments, not only the named frames; a whole-film
+  ghosting / double-image sweep; anchor-frame character alignment (each
+  frame still redrawn from its own source frame, never a wholesale copy of
+  the anchor); title-card segments checked to the end of their shot, as
+  their own verdict line; a placeholder list kept separate from real
+  frames, with freeze fills and neighbor fills labeled differently; dark
+  and black frames; costume and hair color against neighbors and source;
+  scope discipline — changed frames reconciled against the authorized
+  list, neighbor defects reported, never self-expanded; and measurement
+  standards applied literally as given.
+- **Disclosure residuals are listed separately and do not count as FAIL;
+  pending user decisions are reported, never decided by QC.** An accepted
+  residual band is not open-ended: a frame past the accepted band needs a
+  new user call, not a silent acceptance. A candidate worse than the
+  current frame is not swapped in; the current frame stays and the
+  residual is disclosed.
+
 ### 7b. Targeted Frame Fixes (user-named frames)
 - Confirm the frame-sheet label ↔ production-file mapping by pixel comparison
   before touching anything: some productions label sheets 0-based while files
@@ -232,6 +330,18 @@ new filename** — never reuse a filename the user may have cached.
   wait for the user's call — do not expand the scope on your own.
 - Skin-tone fixes are matched to the neighbors' brightness/warmth and may need
   more than one single-frame round; re-check after each round.
+- **Rework is AI redraw only, no programmatic pictures.** Every frame,
+  including pure-black frames, is redrawn by the image pipeline; PIL/Python
+  generated pictures, programmatic blending, and programmatic crossfades are
+  forbidden in rework. A rework uses the earliest production method for that
+  line (original prompt, method, and parameters as logged — no self-invented
+  "optimization"), covers the problem segment plus a few seconds either
+  side, redraws at 12fps frame by frame, and carries every user-pointed
+  defect into the fix.
+- **Subtitles are overlaid, never AI-drawn.** The AI draws a clean picture
+  only, with no subtitles; subtitles are then overlaid to the source
+  specification (font, size, position, timeline). The AI must not change a
+  subtitle's font or size, and must not be asked to draw subtitle text.
 
 ### 8. Delivery Checks
 - `ffprobe`: duration, fps, total frame count match expectations (verify the
@@ -273,7 +383,7 @@ The workspace is disposable; the method assets are not.
 
 ### 11. Review Frame Sheets (how QC material is shown to the user)
 - One sheet per second, 12 frames per sheet (the 12fps grid), frame numbers in
-  red. No 25-frame mega-sheets, no one-image-per-frame spam.
+  white for user delivery. No 25-frame mega-sheets, no one-image-per-frame spam.
 - Keep sheets in a persistent workspace directory, never /tmp (links died there).
 
 ## Tooling
@@ -314,3 +424,20 @@ The workspace is disposable; the method assets are not.
 17. **Recheck the version right before upload.** Upload only the newest landed version.
 18. **Preserve the method assets** (prompt, logs, maps, shot book) outside the
     deletable workspace; a lost prompt is reconstructed, validated, and labeled.
+19. **Background-first board is user-gated only** (§3b): never on your own
+    initiative, only on the user's explicit order for a named place, judged
+    place by place by the user. Dark-scene black paper is not a board.
+20. **Audit the base before building on it** (§3d): abolished methods,
+    duplicate/frozen pairs, and unreconciled fills are replaced by per-frame
+    redraw, never shipped for the user to catch.
+21. **Assembly safety:** remove-before-copy in assembly directories, never
+    overwrite a possibly hard-linked file in place, and map streams
+    explicitly with a dimension check against the remake frames (§6).
+22. **QC PASS before delivery** (§7a): producer self-check does not count;
+    disclosure residuals are listed separately, pending decisions are
+    reported, never decided by QC.
+23. **Rework is AI redraw only** (§7b): no programmatic pictures or blending;
+    the AI draws clean pictures only and subtitles are overlaid afterwards
+    to source specification.
+24. **Deliver only the latest version:** older delivered versions are cleared,
+    so the newest version is the only one in circulation.

@@ -20,9 +20,17 @@ output: out/f_%04d.png
 
 ## 3. Assemble 12fps master + mux audio + faststart
 ```bash
+# Remove the destination before copying into an assembly directory:
+# never overwrite a file in place that may be hard linked to an earlier
+# assembly (November 2026: a copy without remove-first polluted earlier
+# assemblies). Map streams explicitly: an audio file can carry a hidden
+# video stream that default selection picks.
 ffmpeg -framerate 12 -i out/f_%04d.png -i audio.m4a \
+  -map 0:v:0 -map 1:a:0 \
   -c:v libx264 -pix_fmt yuv420p -crf 18 -c:a aac -movflags faststart \
   final-12fps.mp4
+# After assembly, verify earlier assemblies are unchanged, and verify
+# output dimensions against the remake frame dimensions, not the source.
 ```
 
 ## 4. Optional 24fps delivery (frame duplication, no invented frames)

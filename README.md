@@ -24,7 +24,7 @@ Distilled from production runs remaking anime OPs at 1920×1080 / 12fps /
 - `SKILL.md` — the full workflow and operating rules
 - `references/style-prompt-template.md` — the frozen prompt template
 - `references/pipeline.md` — ffmpeg commands for extract / assemble / verify / QC
-- `references/rework-experience.md` — casebook: watermark handling, title-card continuity, color locks, and rework discipline from the Slam Dunk & Fire Force productions
+- `references/rework-experience.md` — casebook: watermark handling, title-card continuity, color locks, rework discipline, and the November 2026 background-first board failure
 
 ## The iron rules
 
@@ -33,3 +33,4 @@ Distilled from production runs remaking anime OPs at 1920×1080 / 12fps /
 3. Strict fidelity — style changes, details don't.
 4. Gaps logged and neighbor-filled, never hidden.
 5. Independent QC; fix only flagged frames; new filename on re-encode.
+6. Background-first board is user-gated only (2026-11-03): never on your own initiative, only when the user orders it for a named place. QC PASS is required before delivery; producer self-check does not count.

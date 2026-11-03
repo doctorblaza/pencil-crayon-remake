@@ -14,6 +14,10 @@ read this before starting a new remake, and again before any rework round.
   Frieren OP2, Fire Force ED1, Higurashi OP, Gundam W/X, FX, Witch from Mercury):
   dynamic fills, static-shot mode, locked plates, direct-source motion — see the
   dated casebook section below.
+- **November 2026 batch** (SPY×FAMILY OP2, Haikyuu OP6): background-first
+  board tried and failed on flicker, user-gated thereafter; QC gate before
+  delivery; assembly hard-link and wrong-stream lessons — see the November
+  2026 section below.
 
 ---
 
@@ -324,6 +328,72 @@ them point.
 
 ---
 
+## November 2026 — SPY & Haikyuu: the Background-First Board Fails
+
+Two 90-second OPs (about 1068 frames each) were reworked in parallel in
+November 2026, and the board method failed the same way on both.
+
+**What the board did and did not fix.** A background plate was drawn first
+and characters added frame by frame on top of it. The background itself
+held — but characters and light beams still varied in brightness from draw
+to draw, so flicker remained. One OP's independent QC verdict was FAIL
+with flicker steps only falling from 379 to 245 and outliers from 217 to
+145: four failing segments, of which one (a 15-frame arena-beam segment)
+had already been redone under the board and still had not healed; one
+(21 frames) had only partly healed; one (8 frames, a night-road head
+segment, still on first-version frames) was the film's worst, with steps up
+to 80.3; and one (35 frames, a title flame-pattern segment, still on
+first-version frames) needed flame-stability as its selection standard,
+with lettering drawn per frame, never into the plate. Dark-field
+improvement and the title card passed and were not counted as FAIL, and
+scope discipline (exactly 490 changed frames) passed — improvement alone
+is not a pass.
+
+**User orders, in order.** First the user ordered the board-made frames
+redone (one OP: 292 board frames; the other: 297 non-dark frames) by the
+replacement method below, keeping dark black-paper frames (black paper is
+not a shared plate) and keeping 27 first-version frames in one segment
+that the user had already assigned to first-version frames. On 2026-11-03
+the user revised the ban into a gate: the board is used only when the
+user says so, and the user judges place by place whether it suits that
+place. The earlier outright-ban wording is superseded by that gate — do
+not quote it as the current rule.
+
+**Replacement method.** Each frame redrawn from its own source frame only,
+at least 4 candidates per frame and up to 8, stopping on a category
+block; select first on likeness and pose, then on luminance closeness to
+the source, then on same-scene neighboring background color, with a
+background step target under 12. Diagnose what jumps (beam, person, or
+both) before rerunning. A candidate worse than the current frame stays
+out and the residual is disclosed. A candidate that paints only
+background with no face — one segment produced bright daytime faces or
+faceless night roads, and the faceless ones looked close on mean
+luminance — is not a pass; the face must be visually confirmed.
+
+**Accepted bands are not open-ended.** One dark segment's skin was
+systematically bright (+46 to +128) and the user accepted it as a
+disclosed residual; frames past that band (+131.1, a blown-out doorway
+zone at about +70, whitened fingernails) were disclosed separately for
+QC judgment, not silently folded into the acceptance.
+
+**Two assembly lessons from the same window.** (1) An assembly copy made
+without removing the destination first wrote through hard links and
+polluted two earlier assemblies' frames; the polluted frames were
+recovered from the fix workers' own directories and the affected film
+was unaffected — rule: remove-before-copy, never overwrite a possibly
+hard-linked file in place, and verify earlier assemblies after assembly.
+(2) One first version encoded the wrong stream because its audio file
+carried a hidden video stream — rule: explicit stream mapping plus a
+dimension check against the remake frames, not the source dimensions.
+
+**QC gate, November 2026.** Independent QC (not the producer, 13 items
+plus the standing user-opinion checklist) must PASS before delivery;
+producer self-check does not count. Disclosure residuals are listed
+separately and do not count as FAIL; pending user decisions are
+reported, never decided by QC.
+
+---
+
 ## Cross-Cutting Rework Rules
 
 1. **Frame-sheet loop.** The user reviews frame sheets, names frame numbers and
@@ -361,5 +431,27 @@ them point.
     live outside the deletable workspace; reconstructions are labeled.
 14. **Validate files, not counts.** After any interruption, decode-check
     every frame; a truncated file still shows up in `ls`.
-15. **Frame sheets: one second per sheet,** 12 frames, red frame numbers,
-    persistent directory — that's the format the user reviews in.
+15. **Frame sheets: one second per sheet,** 12 frames, white frame numbers
+    for user delivery, persistent directory — that's the format the user
+    reviews in.
+16. **Background-first board is user-gated only** (2026-11-03 final order):
+    never on your own initiative, only on the user's explicit order for a
+    named place, judged place by place by the user. Black-paper dark frames
+    are not boards. Flicker repair is per-frame source redraw with
+    multi-candidate selection and same-scene background comparison.
+17. **Resume gate:** audit any base for abolished methods and unexplained
+    duplicate/frozen pairs before building on it; replace suspect segments
+    by per-frame redraw.
+18. **Assembly safety:** remove-before-copy, never overwrite a possibly
+    hard-linked file in place, verify earlier assemblies afterwards;
+    explicit stream mapping and a dimension check against the remake
+    frames.
+19. **QC PASS before delivery:** producer self-check does not count;
+    residuals are disclosed separately, pending decisions are reported,
+    never decided by QC.
+20. **No-face is not a pass:** a candidate with no face or subject, however
+    close its mean luminance, is rejected; the subject must be visually
+    confirmed.
+21. **Rework is AI redraw only:** no programmatic pictures or blending;
+    subtitles are overlaid afterwards to source specification, never
+    AI-drawn.
