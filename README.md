@@ -34,3 +34,4 @@ Distilled from production runs remaking anime OPs at 1920×1080 / 12fps /
 4. Gaps logged and neighbor-filled, never hidden.
 5. Independent QC; fix only flagged frames; new filename on re-encode.
 6. Background-first board is user-gated only (2026-11-03): never on your own initiative, only when the user orders it for a named place. QC PASS is required before delivery; producer self-check does not count.
+7. Paper color follows the source background (2026-11-15): rotate paper colors, black only when the background is black or dark. Flicker is judged shot by shot (2026-11-16); a step over the gate by 5 or less is a marginal residual. When a frame cannot land, leave the placeholder.

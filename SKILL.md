@@ -25,6 +25,9 @@ This is the "B-track" method: fully programmatic, whole-clip stylization.
 - Establish the aspect ratio before anything else: distinguish the file's canvas
   ratio from the picture's content ratio (pillarbox/letterbox), and state the
   delivery ratio and any fixed crop window in the production log.
+- Record the source's maximum resolution and the quality ceiling it sets:
+  a 360p-only source upscaled to 1920×1080 is capped by the source, and no
+  redraw can invent detail the source never had.
 - Extract frames at 12fps: `ffmpeg -i src.mp4 -vf fps=12 frames/f_%04d.png`
 - Extract the original audio separately for the final mux.
 
@@ -96,6 +99,15 @@ Measurements are for QC and candidate selection only, never for rebuilding actio
   the board rule, and the locked-camera one-moving-element exception in
   §3c (named shots only) is a separate exception, not a general board
   license.
+- **Paper color follows the source background (user order, 2026-11-15).**
+  Rotate paper colors by the source background; black is not the default.
+  Black paper is used only when the background itself is black or dark.
+  Colored-paper prompts are derived from the frozen black-paper prompt by
+  changing only the paper-color description (gray, light gray, warm tan,
+  teal, and similar, chosen against the source background). Each paper
+  color has its own luminance distribution, and a target window can fall
+  in the gap between two papers' distributions — a structural miss, not a
+  sampling miss (see §5b).
 - **Flicker repair, replacement method (user order, 2026-11-03):** redraw
   each frame from its own source frame only, generate multiple candidates
   per frame (at least 4, up to 8; stop drawing on a category block), and
@@ -123,6 +135,9 @@ Per shot, record:
   shifts apparent color; never copy a character's colors from another scene).
 - Background reference/anchor, motion class (below), treatment (color / black-and-white /
   silhouette / glare-washed), and transition type (cut / dissolve / wipe).
+  Record each shot's exact frame boundaries in the shot book: flicker is
+  judged shot by shot (§7.8), and a wrong boundary misjudges a cut as a
+  flicker.
 - **Restricted motifs**: logos, emblems, characters, or props that may appear
   only in specific segments (e.g. an emblem that belongs only at the ending).
   Any occurrence outside its source segment is an automatic FAIL.
@@ -179,7 +194,17 @@ production log before new work starts:
   verified assembly — the assembled file exists, its frame count matches
   the expected count, and its faststart state is correct. Keep the run
   open, or hand the unreconciled list explicitly to a closing coordinator,
-  when any group is unreconciled or assembly is missing.
+  when any group is unreconciled or assembly is missing. Close-out is a
+  disk check, never a status summary: a coordinator once reported a group
+  as still running when it had already landed 4/4, and the work sat
+  unmerged for hours until the user asked.
+- Before dispatching a cross-segment rework, verify the segment boundaries
+  on disk (landed directories and manifests), never from memory — a
+  dispatch once wrote the generation directory wrong in four places
+  because the boundaries were recalled, not checked. Check the task brief
+  against the line's standing rules (removing names, paper choice, and
+  similar) before dispatch: a brief that omits a line rule wastes a whole
+  wave of candidates on frames that must be discarded.
 
 ### 5. Gap Policy — Honest, Never Hidden
 The image pipeline will refuse some frames (content filters) or return black/bad frames.
@@ -195,6 +220,15 @@ The image pipeline will refuse some frames (content filters) or return black/bad
   silently. Always report the **longest continuous static stretch** too, not just
   the total count (one production hid a 42-frame ≈ 3.5s freeze inside a
   "13% gaps" total), plus the per-step recovery counts.
+- **"Use X" means copy X.** When the user says a frame should use another
+  frame, copy that frame as the placeholder (byte-identical), never redraw
+  it. The same holds for "use the previous frame" fallbacks: disclose
+  what the copy gains and what it loses (a copy can fix a wall color while
+  losing the text), and offer the revert.
+- **When it cannot land, leave the placeholder (user rule, 2026-11-15).**
+  After the capped waves below, a frame that still cannot land stays a
+  placeholder: no more redraws, no bridge, no filter, unless the user
+  orders otherwise. A worse candidate is never hard-swapped in.
 - **The three-step siege — exception, gated:** only on the user's explicit order,
   only for user-named segments: ① retry with the original prompt, up to 2 attempts;
   ② retry with a slightly adjusted prompt, up to 2 attempts (log the exact wording
@@ -212,6 +246,42 @@ The image pipeline will refuse some frames (content filters) or return black/bad
     final: when it triggers, stop, leave the film unchanged if nothing passed,
     and close any retry job.
 
+### 5a. Placeholder Anchors Roll Forward (user order, 2026-11-09)
+- Fill every placeholder from the previous frame, uniformly across a
+  segment, unless the user explicitly orders a different anchor for a
+  named frame and that exception is logged with its frame number.
+- Audit every placeholder anchor against the previous frame before any
+  retry round starts, and correct wrong anchors before drawing anything
+  in that round.
+- When a placeholder landing produces a new image, use that new image as
+  the anchor for the following placeholders in the same segment, so the
+  anchor rolls forward with each landing instead of staying on the old
+  frame.
+- Report the audit in the retry report with the count of anchors checked,
+  the count corrected, and any frame the user explicitly ordered kept on
+  a different anchor.
+
+### 5b. Bridge Frames and the Marginal Band
+- **Bridge frames are user-approved only, for a user-named range.**
+  A bridge is a frame that does not pass the gate, placed as a stepping
+  stone so later frames can pass off it. Its over-gate deviation is
+  disclosed at approval time (for example a bridge at −20.6, or a second
+  bridge at +25.6 after the first), and the bridge is logged as a
+  disclosed residual, never as a pass.
+- **Paper-distribution gaps are structural.** When the target window falls
+  between two papers' distributions (for example black paper tops out
+  near 63 while gray paper starts near 129, with the window at 88–118),
+  no paper reaches it and more draws of the same papers will not help.
+  The options are: expand the redraw range so the ramp can be rebuilt,
+  place a user-approved bridge, or accept the placeholder (§5). Do not
+  keep drawing the same papers.
+- **Marginal band (user order, 2026-11-08, and 2026-11-15):** a luminance
+  step over the gate by 5 or less is a marginal residual — accept it,
+  disclose it, do not count it as a FAIL driver, and do not ask the user.
+  Over the gate by more than 5, the frame does not land. Likeness must
+  still look like the source frame; small color or line deviations are
+  acceptable and disclosed, a wrong likeness is not.
+
 ### 6. Assembly
 - 12fps master: `ffmpeg -framerate 12 -i out/f_%04d.png -i audio.m4a -map 0:v:0 -map 1:a:0 -c:v libx264 -pix_fmt yuv420p -c:a aac -movflags faststart final.mp4`
 - **Explicit stream mapping is required, not optional.** An audio file can
@@ -225,7 +295,21 @@ The image pipeline will refuse some frames (content filters) or return black/bad
   After assembly, check earlier assemblies to confirm no earlier assembly
   changed: in November 2026 a copy without remove-first wrote through hard
   links and polluted two earlier assemblies' frames, which had to be
-  recovered from the fix workers' own directories.
+  recovered from the fix workers' own directories. The same rule applies
+  when landing a replacement frame into a landed directory: a landed file
+  may share an inode with an already-delivered assembly, and an in-place
+  copy writes through it and changes the delivered version. Remove first,
+  then copy, and verify delivered assemblies are unchanged afterwards.
+- After any rework landing, refresh every dependent gap fill before
+  assembly, because a gap fill built from an older anchor ships the wrong
+  shot. Verify every manifest anchor claim against the actual frame
+  before assembly, by content and by md5, and never trust the manifest
+  text alone. Back up a manifest before patching it, and check the patch
+  maps to the right column (landed luminance, not source luminance) with
+  Unix line endings. Keep a fixed frame fixed: when the landed copy of a
+  frame is older than the delivered fixed version, keep the fixed version
+  in the assembly and sync the landed copy and the manifest row to it, so
+  assembly never regresses a fix.
 - If 24fps delivery is needed, duplicate each frame once at assembly time
   (12fps of real AI frames → 24fps output), don't invent in-between frames.
 - 1920×1080, H.264 + AAC, `faststart` (moov atom at file head) — required for web/GitHub playback.
@@ -261,6 +345,14 @@ A separate QC agent (not the producer) checks the assembled video:
    Frames whose background or colors jump visibly or past threshold against
    the source and the scene anchor are redrawn from their source frames; a
    scene that keeps failing this check is redone as a whole scene.
+   **Judge flicker shot by shot (user order, 2026-11-16):** the luminance
+   step gate applies only inside one shot. At a cut, do not judge the
+   luminance step — check only the content (early/late cut, wrong shot)
+   and each frame's likeness. White flashes, fades in and out, and
+   dissolves inside a shot are still judged by the gate. Compute each
+   step from the delivered frames themselves, so a frame that matches its
+   own source frame closely can still fail on the jump against its
+   delivered neighbors.
 9. **Dark scenes & black frames (dedicated pass)**: sample every dark shot.
    Black frames stay pure black — any invented paper edge, border, or glow is a
    FAIL (dark space backgrounds repeatedly came back beige-paper; a black frame
@@ -289,6 +381,23 @@ new filename** — never reuse a filename the user may have cached.
 - **Independent QC PASS is required before delivery.** The producer's own
   check does not count as a pass, and a FAIL film is not delivered or
   published, however far the numbers improved.
+- **A PASS film is delivered at once, without asking again (user order,
+  2026-11-04).** Do not hold a PASS film for a separate delivery-approval
+  question: upload the newest version, share it with the standing share
+  recipient, move the previous delivered version to trash, and send the
+  user a copy in the conversation. A FAIL film stays undelivered as a
+  final version unless the user explicitly orders a review copy, and then
+  label that copy as a review copy, not a final version. Two exceptions:
+  a user hold ("wait for X") suspends even a PASS direct delivery until
+  the hold lifts, and a user order to skip QC or to upload in parallel
+  for review is followed — but that upload is labeled a review copy, not
+  a PASS delivery, and the FAIL conclusion (if any) stays on record.
+  Sending frame sheets for the user to look at does not pause PASS
+  delivery, unless the user says to look first.
+- **Re-verify the verdict numbers.** The coordinator independently
+  re-checks the verdict's key numbers against disk before acting on them
+  — a verdict once claimed two frames had different md5s when they were
+  identical, and the defect itself was real but the number was not.
 - Besides the 13 items above, QC must check the standing user-opinion
   checklist and write each check into the verdict: subject-scale trajectory
   (height / centroid step of roughly >10px inside a continuous segment is
@@ -310,6 +419,36 @@ new filename** — never reuse a filename the user may have cached.
   new user call, not a silent acceptance. A candidate worse than the
   current frame is not swapped in; the current frame stays and the
   residual is disclosed.
+- Check a defect class at full size. When a defect is found, sweep the
+  same defect across the whole segment and visually similar segments
+  frame by frame at full size, never at frame-sheet scale alone, because
+  thin artifacts are invisible at contact-sheet scale. When a repair
+  wave notices the same defect on a sibling frame outside the named
+  range, list it in the verdict as a disclosed residual with its frame
+  numbers when the user has not ordered it fixed, and never leave it
+  unmentioned.
+- Check unification in landed space. When a segment is unified to one
+  base frame, check ghosting and double images by comparing each landed
+  frame against the base and the source, frame by frame, never by source
+  frame difference alone or by spot-checking two frames, because a ghost
+  can exist only in the generated frames while the source shows no
+  difference.
+- Measure every inter-frame step in delivered space. For each filter
+  fallback frame and each reworked frame, report its step deviation
+  against the adjacent delivered frames, never its deviation against its
+  own source frame. A source-relative number is not a step, because a
+  filter frame can sit close to its source while jumping far against its
+  AI neighbors. A frame whose delivered step jumps visibly against its
+  neighbors is a FAIL driver, even when its source-relative deviation is
+  small. A filter fallback is a user-approved exception for a named line
+  only (brightness stitching with a linearly decreasing offset, as used
+  on two lines), never a default method.
+- Re-verify even a one-frame change. A version that changes only one
+  frame still needs an independent re-verification scoped to that frame
+  and its neighbors before delivery. A direct upload order from the user
+  is not a scoped re-verification unless the user explicitly orders
+  skipping QC, in which case label the delivery as a review copy with no
+  independent QC verdict, not as a final version.
 
 ### 7b. Targeted Frame Fixes (user-named frames)
 - Confirm the frame-sheet label ↔ production-file mapping by pixel comparison
@@ -323,6 +462,37 @@ new filename** — never reuse a filename the user may have cached.
   neighbors (a shirt was fixed by picking the one candidate whose measured
   color left the black range into the source's grey-purple family; an eye color
   by saturation 0.655 → 0.557 to match its neighbors).
+- **Fix waves are capped at 2 waves × 4 draws per frame.** Only frames
+  that failed the previous wave enter the next wave. For a text fix, the
+  gate judges the text only (not costume color); after 2 waves, stop and
+  close with the closest previous text-correct frame copy, or keep the
+  current frame — do not keep drawing blindly.
+- **Fix instructions outrank the source.** When the user says to change
+  only the text, change only the text on the current version of the
+  frame, without checking the source text; the source is the auxiliary
+  reference, the instruction is the authority. When the user names a
+  frame to look at first ("make it and show me"), that frame goes
+  look-first and is not assembled until the user approves it.
+- **Fit every hair-color fix to that frame's own hair shape.** Build the
+  mask from that frame's own source frame and fit it to the hair outline
+  in that frame alone. Never reuse a fixed rectangle, a fixed circle, or
+  another frame's mask. Check the mask against the hair before applying
+  color. The mask must cover hair only, not face, eyes, forehead, skin,
+  or background. If the mask does not fit, do not apply the change: leave
+  the frame unchanged and report it as a disclosed residual. A wrong mask
+  is worse than no fix. Check the recolored frame at full size against
+  the source and neighbors; reject and revert the frame when any colored
+  shape sits outside the hair (disc, ellipse, rectangle, or straight
+  edge on a face or wall). Fix consecutive frames as a group only when
+  each frame still gets its own fitted mask.
+- Use the mask to constrain an AI redraw, not to authorize a
+  programmatic recolor. The mask limits where the image pipeline redraws
+  or inpaints the hair. A mask recolor that changes color on the current
+  frame without redrawing it is a base-preserving edit: use it only when
+  the user approves or prescribes it for that line. Never use it to
+  bypass an AI-redraw-only mandate for that line. A minimal local edit
+  (for example darkening only a face) is likewise only for a user-named
+  frame, labeled with its method in the log.
 - **Consecutive frames with the same defect are fixed as a group**: one shared
   geometry/color target across the run and a check against the frame after the
   run, so the fix itself doesn't introduce a jump.
@@ -349,6 +519,8 @@ new filename** — never reuse a filename the user may have cached.
   by mistake and had to be re-assembled at true 12fps/1080).
 - Spot-check frames at ~10s / 45s / 80s against the source.
 - Confirm `faststart` (moov before mdat).
+- If an encode is interrupted (for example by a runtime restart), the
+  file is partial and has no usable moov: re-encode it, do not ship it.
 - Play the full clip once, end to end, before announcing completion.
 
 ### 9. Publishing — Verify the Title Against the Source
@@ -363,6 +535,7 @@ new filename** — never reuse a filename the user may have cached.
   that already carry AI in the title unchanged.
 - After posting, open the live post and confirm the title shown matches what was
   verified and that the creation statement took effect.
+- Do not state the frame rate in the post description.
 - **Recheck the version at upload time**: list the output folder again in the
   moment right before uploading and upload only the newest landed version —
   never a snapshot taken when the user picked a cover or approved an earlier
@@ -441,3 +614,49 @@ The workspace is disposable; the method assets are not.
     to source specification.
 24. **Deliver only the latest version:** older delivered versions are cleared,
     so the newest version is the only one in circulation.
+25. **PASS delivers at once, without asking again** (§7a): upload the newest
+    version, share it with the standing share recipient, move the previous
+    delivered version to trash, and send the user a copy in the
+    conversation. A FAIL film stays undelivered as a final version unless
+    the user explicitly orders a review copy, labeled as a review copy.
+    A user hold suspends even a PASS delivery until it lifts.
+26. **Hair-color fixes stay inside the hair** (§7b): use a mask fitted to
+    each frame's own hair shape to constrain an AI redraw or inpaint,
+    check it before applying color, and leave the frame unchanged when
+    the mask does not fit. A non-redraw mask recolor is a base-preserving
+    edit only when the user approves or prescribes it for that line, and
+    never to bypass an AI-redraw-only mandate.
+27. **Verify landed frames, not proxies** (§6 and §7a): check defect
+    siblings at full size, check unification ghosting in landed space
+    frame by frame, refresh gap fills after a rework landing and verify
+    manifest claims against actual frame content and md5, and re-verify
+    even a one-frame change before delivery.
+28. **Placeholder anchors roll forward** (§5a): placeholders use the
+    previous frame, every placeholder anchor is audited before a retry
+    round, and a landed placeholder becomes the anchor for the following
+    placeholders in its segment.
+29. **Measure inter-frame steps in delivered space** (§7a): report a
+    filter fallback or reworked frame by its deviation against the
+    adjacent delivered frames, never by its deviation against its own
+    source frame.
+30. **Paper color follows the source background** (§3b): rotate paper
+    colors, black only when the background is black or dark. A target
+    window between two papers' distributions is structural, not a
+    sampling miss (§5b).
+31. **Judge flicker shot by shot** (§7.8): the luminance step gate applies
+    only inside one shot; at a cut, check content and likeness only.
+    White flashes, fades, and dissolves inside a shot are still gated.
+32. **Marginal band is 5** (§5b): a step over the gate by 5 or less is an
+    accepted disclosed residual; over 5, the frame does not land.
+33. **When it cannot land, leave the placeholder** (§5): no more redraws,
+    no bridge, no filter, unless the user orders otherwise. Bridges are
+    user-approved only, for a named range, with the deviation disclosed.
+34. **"Use X" means copy X** (§5): a user-named frame copy is
+    byte-identical, never a redraw, with gains and losses disclosed.
+35. **Fix waves are capped at 2 × 4** (§7b): only failures advance; a text
+    gate judges text only; after 2 waves, close with the closest
+    text-correct copy or keep the current frame.
+36. **Verify boundaries and briefs on disk before dispatch** (§4):
+    segment boundaries from disk, never from memory; briefs checked
+    against the line's standing rules; close-out from disk, never from a
+    status summary.

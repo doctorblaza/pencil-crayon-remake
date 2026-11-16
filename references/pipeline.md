@@ -31,6 +31,8 @@ ffmpeg -framerate 12 -i out/f_%04d.png -i audio.m4a \
   final-12fps.mp4
 # After assembly, verify earlier assemblies are unchanged, and verify
 # output dimensions against the remake frame dimensions, not the source.
+# Back up a manifest before patching it; patch the landed-luminance
+# column (not source luminance), with Unix line endings.
 ```
 
 ## 4. Optional 24fps delivery (frame duplication, no invented frames)

@@ -18,6 +18,10 @@ read this before starting a new remake, and again before any rework round.
   board tried and failed on flicker, user-gated thereafter; QC gate before
   delivery; assembly hard-link and wrong-stream lessons — see the November
   2026 section below.
+- **November 15–16, 2026 batch** (Durarara OP2, Gundam SEED OP1): colored
+  paper rotation, bridge frames, shot-by-shot flicker judging, marginal
+  band of 5, leave-the-placeholder rule, hard-link write-through via
+  landed directories — see the November 15–16 section below.
 
 ---
 
@@ -394,6 +398,96 @@ reported, never decided by QC.
 
 ---
 
+## November 15–16, 2026 — Durarara OP2 & Gundam SEED OP1
+
+Two more 90-second OPs (about 1068–1080 frames each) ran after the
+November 3 update, and they produced the next round of rules.
+
+**Colored paper, not black by default.** The Durarara line's Round 3
+redrew long placeholder runs on paper matched to the source background:
+gray, light gray, warm tan, and teal, each prompt derived from the frozen
+black-paper prompt by changing only the paper-color description. Black
+paper is now used only when the background itself is black or dark (user
+order, 2026-11-15). Paper distributions are real and bounded: gray paper
+drew 82–126 while a near-black target window sat near 19, so 32 draws
+landed 0; light gray paper drew systematically bright against its
+windows; white paper drew about 70–90 against a ramp needing 40–65.
+When the target window falls between two papers' distributions, more
+draws of the same papers cannot help — expand the range, place a
+user-approved bridge, or accept the placeholder.
+
+**Bridge frames, approved and disclosed.** A bridge is a frame that does
+not pass the gate, placed as a stepping stone so later frames can pass
+off it. Three bridges were used on this line, each approved by the user
+with its deviation disclosed at approval time: one at −20.6 that let the
+next seven black-paper frames land, one at −20.6 in a dark segment, and
+a second bridge at +25.6 that cut the worst step in its segment from
++82.2 to +25.6. Bridges are only for a user-named range, and a bridge
+is a disclosed residual, never a pass.
+
+**Flicker is judged shot by shot (user order, 2026-11-16).** The
+luminance step gate applies only inside one shot. At a cut, the step is
+not judged — only the content (early/late cut, wrong shot) and each
+frame's likeness. White flashes, fades in and out, and dissolves inside
+a shot are still judged by the gate.
+
+**Marginal band is 5.** A step over the gate by 5 or less is a marginal
+residual: accept it, disclose it, do not count it as a FAIL driver, and
+do not ask the user. Over 5, the frame does not land. Likeness must
+still look like the source frame.
+
+**When it cannot land, leave the placeholder (user rule, 2026-11-15).**
+After the capped waves, a frame that still cannot land stays a
+placeholder: no more redraws, no bridge, no filter, unless the user
+orders otherwise. One segment's 11 frames drew 96 times with 0 landings
+on warm tan paper and stayed placeholders, re-anchored to the landed
+frame before them.
+
+**Filter fallback is a per-line exception.** The Durarara line's two
+longest frozen segments were landed by a brightness-stitched filter
+(offset decreasing linearly, for example +23.9 to +15.1), approved by
+the user as an extension of the earlier filter exception to that line
+only. A filter is never a default method, and a filter frame is judged
+in delivered space — its step against its delivered neighbors, not
+against its own source frame.
+
+**Hard links bite in landed directories too.** Assembly directories are
+hard-linked copies, and a landed file can share an inode with an
+already-delivered assembly: a plain copy landing replacement frames
+into landed/ wrote through the shared inode and changed the delivered
+assembly, recovered only from a backup. Remove before copy, in landed/
+as in assembly, and verify delivered assemblies afterwards. Workers
+that used remove-then-copy had no incident.
+
+**Dispatch from disk, not from memory.** A cross-segment rework
+dispatch wrote the generation directory wrong in four places because
+the segment boundaries were recalled instead of checked against the
+landed directories. Verify boundaries on disk before dispatching, and
+check the brief against the line's standing rules before dispatch — one
+brief omitted the line's remove-names rule, and a whole wave of
+candidates had to be discarded for carrying names.
+
+**Close-out is a disk check, not a status summary.** One fix group
+finished 4/4, but the coordinator reported it as still running and the
+work sat unmerged for hours until the user asked about it. The
+coordinator must reconcile claimed frames against decode-valid landed
+frames on disk, not trust a status line.
+
+**Source resolution caps quality.** The Gundam SEED OP1 source was
+360p at best, upscaled to 1920×1080 for drawing; the remake's quality
+ceiling is the source's, and no redraw invents detail the source never
+had. An encode interrupted by a runtime restart shipped a file with no
+usable moov and had to be re-encoded — verify faststart after every
+encode.
+
+**Instructions outrank the source.** One rework was ordered with the
+user's wording as authority and the source as auxiliary only: change
+only the text, on the current version of the frame, without checking the
+source text. The same priority applies to every fix — a user-named frame
+is fixed as instructed, and the source is the reference, not the boss.
+
+---
+
 ## Cross-Cutting Rework Rules
 
 1. **Frame-sheet loop.** The user reviews frame sheets, names frame numbers and
@@ -455,3 +549,34 @@ reported, never decided by QC.
 21. **Rework is AI redraw only:** no programmatic pictures or blending;
     subtitles are overlaid afterwards to source specification, never
     AI-drawn.
+22. **Paper color follows the source background** (2026-11-15): rotate
+    paper colors, black only when the background is black or dark. A
+    target window between two papers' distributions is structural.
+23. **Judge flicker shot by shot** (2026-11-16): the luminance step gate
+    applies only inside one shot; at a cut, check content and likeness
+    only. In-shot white flashes, fades, and dissolves are still gated.
+24. **Marginal band is 5** (2026-11-08 and 2026-11-15): a step over the
+    gate by 5 or less is an accepted disclosed residual; over 5, the
+    frame does not land.
+25. **When it cannot land, leave the placeholder** (2026-11-15): no more
+    redraws, no bridge, no filter, unless the user orders otherwise.
+    Bridges are user-approved only, for a named range, with the
+    deviation disclosed.
+26. **"Use X" means copy X:** a user-named frame copy is byte-identical,
+    never a redraw, with gains and losses disclosed.
+27. **Fix waves are capped at 2 x 4:** only failures advance; a text
+    gate judges text only; after 2 waves, close with the closest
+    text-correct copy or keep the current frame.
+28. **Verify boundaries and briefs on disk before dispatch:** segment
+    boundaries from disk, never from memory; briefs checked against the
+    line's standing rules; close-out from disk, never from a status
+    summary.
+29. **Remove before copy in landed directories too:** a landed file can
+    share an inode with a delivered assembly, and an in-place copy writes
+    through it.
+30. **PASS delivers at once** (2026-11-04): a user hold suspends even a
+    PASS delivery until it lifts; a skip-QC or parallel review upload is
+    labeled a review copy, not a PASS delivery.
+31. **Instructions outrank the source:** when the user says change only
+    the text, change only the text on the current frame, without checking
+    the source text.
